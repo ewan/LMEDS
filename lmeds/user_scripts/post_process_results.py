@@ -2,7 +2,7 @@
 '''
 Created on Aug 9, 2015
 
-@author: timmahrt
+@author: timmahrt, ewan
 '''
 
 import os
@@ -240,10 +240,10 @@ def postProcessResults(testName, sequenceFN, removeDuplicatesFlag,
     extractFromTest(pathToData, uniquePageList, removeItemList)
     
     # Transpose the surveys
-    if "survey" in uniquePageList:
+    if "survey" in uniquePageList or "valsurvey" in uniquePageList:
         surveyNameList = []
         for pageName, stimuliArgList in pageNameList[0]:
-            if pageName == "survey":
+            if pageName == "survey" or pageName == "valsurvey":
                 surveyName = stimuliArgList[0]
                 surveyNameList.append(join(rootPath, surveyName + '.txt'))
         

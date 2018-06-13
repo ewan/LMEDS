@@ -1,7 +1,7 @@
 '''
 Created on Mar 1, 2014
 
-@author: tmahrt
+@author: tmahrt, ewan
 
 
 '''
@@ -16,6 +16,166 @@ from lmeds.code_generation import html
 from lmeds.code_generation import audio
 from lmeds.utilities import constants
 from lmeds.utilities import utils
+
+class ValidatingSurveyPage(abstract_pages.AbstractPage):
+
+    pageName = "valsurvey"
+
+    def __init__(self, surveyName, *args, **kargs):
+        super(ValidatingSurveyPage, self).__init__(*args, **kargs)
+
+        self.formName = surveyName
+        self.surveyFN = surveyName + ".txt"
+        self.surveyRoot = self.webSurvey.surveyRoot
+
+        # Variables that all pages need to define
+        self.numAudioButtons = 0
+        self.processSubmitList = ['validateForm()']
+
+        self.surveyItemList = survey.parseSurveyFile(join(self.surveyRoot,
+                                                          self.surveyFN))
+
+    def _getHTMLTxt(self):
+        i = 0
+        itemHTMLList = []
+
+        choiceBoxIndexList = []
+        for item in self.surveyItemList:
+            itemElementList = []
+            for dataTuple in item.widgetList:
+                elementType, argList = dataTuple
+                if elementType == "None":
+                    widget = " "
+                else:
+                    widget = html.createWidget(elementType, argList, i)[0]
+                itemElementList.append(widget)
+
+                if elementType == "None":
+                    continue
+
+                if elementType == "Choicebox":
+                    choiceBoxIndexList.append(i)
+                i += 1
+
+            elementHTML = " ".join(itemElementList)
+
+            if elementHTML.strip() == "":
+                itemHTML = "%s" % item.text
+            else:
+                itemHTML = "%s) %s<br />%s"
+                itemHTML %= (item.enumStrId, item.text, elementHTML)
+
+            if item.depth == 1:
+                itemHTML = "<div id='indentedText'>%s</div>" % itemHTML
+            elif item.depth > 1:
+                itemHTML = "<div id='doubleIndentedText'>%s</div>" % itemHTML
+
+            itemHTMLList.append(itemHTML)
+
+        surveyHTML = "<br /><br />\n".join(itemHTMLList)
+
+        embedTxt = 'window.addEventListener("load", setchoiceboxes);\n'
+
+        htmlTxt = "<div id='longText'>%s</div>" % surveyHTML
+        return htmlTxt, embedTxt
+
+    def getValidation(self):
+        result = "  for (var i=0; i < " + str(len(self.surveyItemList)) \
+               + "; i++) {\n" \
+               + "    var x = document.forms[\"languageSurvey\"]" \
+               + "[String(i)].value;\n" \
+               + "    if (x == \"\") {\n" \
+               + "      alert(\"All fields must be filled out\");\n" \
+               + "      return false;\n" \
+               + "    }\n"\
+               + "  }\n"\
+               + "  return true;\n"
+        return result
+
+    def getOutput(self, form):
+
+        def replaceCommas(inputItem):
+            if isinstance(inputItem, constants.list):
+                outputItem = [inputStr.replace(",", "")
+                              for inputStr in inputItem]
+            else:
+                outputItem = inputItem.replace(",", "")
+            return outputItem
+        
+        tmpList = []
+        k = 0
+        
+        # Filter out items with no inputs (essentially notes/comments)
+        dataFullList = [item for item in self.surveyItemList
+                        if not all([row[0] == "None"
+                                    for row in item.widgetList])]
+        
+        for item in dataFullList:
+            
+            for i, currentItem in enumerate(item.widgetList):
+                itemType, argList = currentItem
+                
+                value = form.getvalue(str(k))
+                
+                if not value:
+                    value = ""
+                    if itemType in ["Choice", "Item_List", "Choicebox"]:
+                        # 1 comma between every element
+                        value = "," * (len(argList) - 1)
+                else:
+                    if itemType not in ["Item_List"]:
+                        value = utils.decodeUnicode(value)
+                        value = replaceCommas(value)
+                        
+                    # Remove newlines
+                    # (because each newline is a new data entry)
+                    if itemType == "Multiline_Textbox":
+                        newlineChar = utils.detectLineEnding(value)
+                        if newlineChar is not None:
+                            value = value.replace(newlineChar, " - ")
+                    elif itemType in ["Choice", "Choicebox"]:
+                        if itemType == "Choice":
+                            index = argList.index(value)
+                        elif itemType == "Choicebox":
+                            index = int(value)
+                            
+                        valueList = ["0", ] * len(argList)
+                        valueList[index] = "1"
+                        value = ",".join(replaceCommas(valueList))
+                        
+                    elif itemType in ["Item_List"]:
+                        if isinstance(value, list):
+                            value = [utils.decodeUnicode(subval)
+                                     for subval in value]
+                        else:
+                            value = [utils.decodeUnicode(value), ]
+                        
+                        indexList = [argList.index(subVal) for subVal in value]
+                        valueList = ["1" if i in indexList else "0"
+                                     for i in range(len(argList))]
+                        value = ",".join(replaceCommas(valueList))
+                    
+                    elif itemType == "None":
+                        continue
+                
+                tmpList.append(value)
+                
+                k += 1
+        
+#         tmpList = outputList
+        
+        return ",".join(tmpList)
+    
+    def getNumOutputs(self):
+        return -1  # TODO: Accurately calculate this
+
+    def getHTML(self):
+        htmlText, embedTxt = self._getHTMLTxt()
+        pageTemplate = join(self.webSurvey.htmlDir, "basicTemplate.html")
+        
+        return htmlText, pageTemplate, {'embed': embedTxt}
+
+
 
 
 class SurveyPage(abstract_pages.NonValidatingPage):

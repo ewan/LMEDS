@@ -1,7 +1,7 @@
 '''
 Created on Feb 28, 2014
 
-@author: tmahrt
+@author: tmahrt, ewan
 '''
 
 from lmeds.pages import assorted_experiment_pages
@@ -34,6 +34,7 @@ def loadPage(webSurvey, pageName, args=None, kargs=None):
                      assorted_experiment_pages.MediaSliderPage,
                      assorted_experiment_pages.MediaListPage,
                      assorted_experiment_pages.SurveyPage,
+                     assorted_experiment_pages.ValidatingSurveyPage,
                      core_pages.LoginPage,
                      core_pages.LoginErrorPage,
                      core_pages.EndPage,

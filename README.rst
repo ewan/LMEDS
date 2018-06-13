@@ -21,7 +21,7 @@ LMEDS
 -----
 
 
-A web platform for collecting text annotation and experiment data online.
+A web platform for collecting text annotation and experiment data online. **This fork** adds "valsurvey", a type of survey that validates and requires that all responses be filled in.
 
 LMEDS was originally developed for conducting Rapid Prosody Transcription annotations
 over the internet.  Since then it has been extended for doing a number of
