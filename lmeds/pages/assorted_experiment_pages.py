@@ -80,16 +80,38 @@ class ValidatingSurveyPage(abstract_pages.AbstractPage):
         return htmlTxt, embedTxt
 
     def getValidation(self):
-        result = "  for (var i=0; i < " + str(len(self.surveyItemList)) \
-               + "; i++) {\n" \
-               + "    var x = document.forms[\"languageSurvey\"]" \
-               + "[String(i)].value;\n" \
-               + "    if (x == \"\") {\n" \
-               + "      alert(\"All fields must be filled out\");\n" \
-               + "      return false;\n" \
+        result = "  second_button = false;" \
+               + "  unfilled = false;" \
+               + "  var loop_end = " + str(len(self.surveyItemList)) + ";\n" \
+               + "  for (var i=0; i < loop_end; i++) {\n" \
+               + "    var field = document.forms[\"languageSurvey\"][String(i)];\n" \
+               + "    var t = field.type;\n" \
+               + "    if (t == \"radio\") {\n" \
+               + "      if (second_button) {\n"\
+               + "        unfilled = unfilled && !field.checked;\n"\
+               + "        if (unfilled) {\n"\
+               + "          break;\n"\
+               + "        }\n"\
+               + "        second_button = false;\n"\
+               + "      } else {\n"\
+               + "        unfilled = !field.checked;\n"\
+               + "        second_button = true;\n"\
+               + "        loop_end++;\n"\
+               + "      }\n"\
+               + "    } else {\n"\
+               + "      var val = field.value;\n" \
+               + "      if (val == \"\") {\n" \
+               + "        unfilled = true;\n" \
+               + "      }\n"\
+               + "      if (unfilled) {\n"\
+               + "        break;\n"\
+               + "      }\n"\
                + "    }\n"\
                + "  }\n"\
-               + "  return true;\n"
+               + "  if (unfilled) {\n" \
+               + "    alert(\"All fields must be filled out\");\n" \
+               + "  }\n"\
+               + "  return !unfilled;\n"
         return result
 
     def getOutput(self, form):
