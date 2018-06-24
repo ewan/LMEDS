@@ -80,25 +80,37 @@ class ValidatingSurveyPage(abstract_pages.AbstractPage):
         return htmlTxt, embedTxt
 
     def getValidation(self):
-        result = "  second_button = false;" \
-               + "  unfilled = false;" \
+        result = "  reading_radio = false;\n" \
+               + "  radio_id = \"\";\n" \
+               + "  unfilled = false;\n" \
                + "  var loop_end = " + str(len(self.surveyItemList)) + ";\n" \
                + "  for (var i=0; i < loop_end; i++) {\n" \
                + "    var field = document.forms[\"languageSurvey\"][String(i)];\n" \
                + "    var t = field.type;\n" \
                + "    if (t == \"radio\") {\n" \
-               + "      if (second_button) {\n"\
-               + "        unfilled = unfilled && !field.checked;\n"\
-               + "        if (unfilled) {\n"\
-               + "          break;\n"\
+               + "      if (reading_radio) {\n"\
+               + "        if (field.id != radio_id) {\n"\
+               + "          if (unfilled) {\n"\
+               + "            break;\n"\
+               + "          }\n" \
+               + "          unfilled = !field.checked;\n"\
+               + "        } else {\n"\
+               + "          unfilled = unfilled && !field.checked;\n"\
+               + "          loop_end++;\n"\
                + "        }\n"\
-               + "        second_button = false;\n"\
                + "      } else {\n"\
                + "        unfilled = !field.checked;\n"\
-               + "        second_button = true;\n"\
-               + "        loop_end++;\n"\
                + "      }\n"\
+               + "      alert(String(i) + unfilled.toString());\n" \
+               + "      reading_radio = true;\n"\
+               + "      radio_id = field.id;\n"\
                + "    } else {\n"\
+               + "      reading_radio = false;\n" \
+               + "      if (reading_radio) {\n" \
+               + "        if (unfilled) {\n"\
+               + "          break;\n"\
+               + "        }\n" \
+               + "      }\n" \
                + "      var val = field.value;\n" \
                + "      if (val == \"\") {\n" \
                + "        unfilled = true;\n" \
