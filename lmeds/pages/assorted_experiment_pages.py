@@ -101,7 +101,6 @@ class ValidatingSurveyPage(abstract_pages.AbstractPage):
                + "      } else {\n"\
                + "        unfilled = !field.checked;\n"\
                + "      }\n"\
-               + "      alert(String(i) + unfilled.toString());\n" \
                + "      reading_radio = true;\n"\
                + "      radio_id = field.id;\n"\
                + "    } else {\n"\
